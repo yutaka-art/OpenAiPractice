@@ -16,7 +16,7 @@ jobs:
           echo "This is a sample file." > output/sample.txt
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: build-artifact
           path: output/sample.txt
