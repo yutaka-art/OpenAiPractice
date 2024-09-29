@@ -12,4 +12,4 @@ jobs:
       - name: Build project
         run: |
           echo "Building the project..."
-          exit 1  # この行が追加され、ビルドを強制的に失敗させます
+#          exit 1  # この行が追加され、ビルドを強制的に失敗させます
