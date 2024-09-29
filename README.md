@@ -3,4 +3,4 @@ az400-githubactions
 
 ![Custom Badge](https://myoctocat.com/assets/images/base-octocat.svg)
 
-[![Status Badge Sample](https://myoctocat.com/assets/images/base-octocat.svg)](https://github.com/yutaka-art/az400-githubactions/actions/workflows/status-badge.yml)
+[![Custom Badge](https://myoctocat.com/assets/images/base-octocat.svg)](https://github.com/yutaka-art/az400-githubactions/actions/workflows/status-badge.yml)
