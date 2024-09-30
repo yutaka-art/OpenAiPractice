@@ -5,9 +5,16 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Increment version
+      # リポジトリをクローン
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # タグのバージョンを取得
+      - name: Get latest tag
         id: version
         run: |
-          LATEST_TAG=$(git tag)
+          git fetch --tags
+          LATEST_TAG=$(git describe --tags --abbrev=0 || echo "No tags found")
           echo "Latest tag: $LATEST_TAG"
