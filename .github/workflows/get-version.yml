@@ -1,32 +1,14 @@
-name: GetVersion
+name: Get Tag Version Sample
 
-on:
-  push:
-    branches:
-      - main
+on: [push]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-
-    # バージョンを自動インクリメントするためのステップ
-- name: Increment version
-  id: version
-  run: |
-    # 最新のタグを取得してバージョンをインクリメント
-    git fetch --tags
-    LATEST_TAG=$(git describe --tags --abbrev=0 || echo "v0.0.0")
-    echo "Latest tag: $LATEST_TAG"
-    
-    # タグが存在しない場合の処理を追加
-    if [ "$LATEST_TAG" = "v0.0.0" ]; then
-      NEW_VERSION="v0.0.1"
-    else
-      # 例えば、セマンティックバージョニングに基づいてパッチバージョンをインクリメントする例
-      NEW_VERSION=$(echo $LATEST_TAG | awk -F. -v OFS=. '{$NF = $NF + 1; print}')
-    fi
-    
-    echo "New version: $NEW_VERSION"
-    echo "##[set-output name=NEW_VERSION;]$NEW_VERSION"
+      - name: Increment version
+        id: version
+        run: |
+          git fetch --tags
+          LATEST_TAG=$(git tag || echo "v0.0.0")
+          echo "Latest tag: $LATEST_TAG"
