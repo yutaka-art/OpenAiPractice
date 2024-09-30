@@ -7,7 +7,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # リポジトリをクローン
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -16,5 +15,12 @@ jobs:
         id: version
         run: |
           git fetch --tags
-          LATEST_TAG=$(git describe --tags --abbrev=0 || echo "No tags found")
-          echo "Latest tag: $LATEST_TAG"
+          # 最新のタグを取得するためのコマンド
+          LATEST_TAG=$(git tag --sort=-creatordate | head -n 1)
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No tags found"
+            exit 1
+          else
+            echo "Latest tag: $LATEST_TAG"
+            echo "##[set-output name=LATEST_TAG;]$LATEST_TAG"
+          fi
