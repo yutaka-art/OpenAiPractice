@@ -37,12 +37,12 @@ jobs:
             exit 1
           else
             echo "Latest tag: $LATEST_TAG"
-            echo "##[set-output name=LATEST_TAG;]$LATEST_TAG"
+            echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
           fi
 
       # NuGetパッケージを生成し、GitHub Packagesに公開
       - name: Package and publish to GitHub Packages
         run: |
-          dotnet pack --configuration Release /p:PackageVersion=${{ steps.version.outputs.LATEST_TAG }} --output ./artifacts
+          dotnet pack --configuration Release /p:PackageVersion=${{ env.LATEST_TAG }} --output ./artifacts
           dotnet nuget push ./artifacts/*.nupkg --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
         working-directory: ConsoleApp1/ConsoleApp1
