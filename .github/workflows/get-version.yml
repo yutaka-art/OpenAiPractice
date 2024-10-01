@@ -28,8 +28,8 @@ jobs:
         id: version
         run: |
           git fetch --tags
-          # 最新のタグを取得するためのコマンド
-          LATEST_TAG=$(git tag --sort=-creatordate | head -n 1)
+          # 最新のタグを取得し、プレフィックスの 'v' を取り除く
+          LATEST_TAG=$(git tag --sort=-creatordate | head -n 1 | sed 's/^v//')
           if [ -z "$LATEST_TAG" ]; then
             echo "No tags found"
             exit 1
@@ -37,6 +37,7 @@ jobs:
             echo "Latest tag: $LATEST_TAG"
             echo "##[set-output name=LATEST_TAG;]$LATEST_TAG"
           fi
+
       # NuGetパッケージを生成し、GitHub Packagesに公開
       - name: Package and publish to GitHub Packages
         run: |
