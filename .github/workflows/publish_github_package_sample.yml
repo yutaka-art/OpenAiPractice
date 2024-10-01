@@ -1,4 +1,4 @@
-name: Get Tag Version Sample
+name: Package and Publish to GitHub Packages Sample
 
 on: [push]
 

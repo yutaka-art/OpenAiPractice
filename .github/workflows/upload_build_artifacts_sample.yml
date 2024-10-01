@@ -1,6 +1,7 @@
-name: Build and Upload Artifacts
+name: Build and Upload Artifacts Sample
 
-on: [push]
+on:
+  workflow_dispatch:
 
 jobs:
   build:
