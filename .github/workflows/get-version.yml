@@ -10,6 +10,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.x'
+
+      - name: Install dependencies
+        run: dotnet restore
+        working-directory: ConsoleApp1/ConsoleApp1
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+        working-directory: ConsoleApp1/ConsoleApp1
+
       # タグのバージョンを取得
       - name: Get latest tag
         id: version
@@ -24,3 +37,9 @@ jobs:
             echo "Latest tag: $LATEST_TAG"
             echo "##[set-output name=LATEST_TAG;]$LATEST_TAG"
           fi
+      # NuGetパッケージを生成し、GitHub Packagesに公開
+      - name: Package and publish to GitHub Packages
+        run: |
+          dotnet pack --configuration Release /p:PackageVersion=${{ steps.version.outputs.LATEST_TAG }} --output ./artifacts
+          dotnet nuget push ./artifacts/*.nupkg --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
+        working-directory: ConsoleApp1/ConsoleApp1
