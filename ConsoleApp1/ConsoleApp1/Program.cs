@@ -1,8 +1,13 @@
 ﻿using Azure;
 using Azure.AI.OpenAI;
 using Azure.AI.OpenAI.Chat;
+using Azure.Search.Documents;
+using Microsoft.Identity.Client;
 using OpenAI.Chat;
+using OpenAI.Embeddings;
+using OpenAI.Images;
 using System.ClientModel;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ConsoleApp1
 {
@@ -17,14 +22,14 @@ namespace ConsoleApp1
 
         public static async Task Main(string[] args)
         {
-            await Chapter03_14_01();
+            await Chapter05_02_01();
         }
 
         private static void Chapter03_07()
         {
             var client = new AzureOpenAIClient(
                 new Uri(OpenAIEndpoint),
-                new AzureKeyCredential(ApiKey)
+                new ApiKeyCredential(ApiKey)
             );
 
             Console.Write("prompt: ");
@@ -40,7 +45,7 @@ namespace ConsoleApp1
         {
             var client = new AzureOpenAIClient(
                 new Uri(OpenAIEndpoint),
-                new AzureKeyCredential(ApiKey)
+                new ApiKeyCredential(ApiKey)
             );
 
             var chatClient = client.GetChatClient(ModelDeployName);
@@ -72,7 +77,7 @@ namespace ConsoleApp1
         {
             var client = new AzureOpenAIClient(
                 new Uri(OpenAIEndpoint),
-                new AzureKeyCredential(ApiKey)
+                new ApiKeyCredential(ApiKey)
             );
 
             var chatClient = client.GetChatClient(ModelDeployName);
@@ -108,7 +113,7 @@ namespace ConsoleApp1
         {
             var client = new AzureOpenAIClient(
                 new Uri(OpenAIEndpoint),
-                new AzureKeyCredential(ApiKey)
+                new ApiKeyCredential(ApiKey)
             );
 
             var chatClient = client.GetChatClient(ModelDeployName);
@@ -145,7 +150,7 @@ namespace ConsoleApp1
         {
             var client = new AzureOpenAIClient(
                 new Uri(OpenAIEndpoint),
-                new AzureKeyCredential(ApiKey)
+                new ApiKeyCredential(ApiKey)
             );
 
             var chatClient = client.GetChatClient(ModelDeployName);
@@ -183,7 +188,7 @@ namespace ConsoleApp1
         {
             var client = new AzureOpenAIClient(
                 new Uri(OpenAIEndpoint),
-                new AzureKeyCredential(ApiKey)
+                new ApiKeyCredential(ApiKey)
             );
 
             var chatClient = client.GetChatClient(ModelDeployName);
@@ -225,7 +230,7 @@ namespace ConsoleApp1
         {
             var client = new AzureOpenAIClient(
                 new Uri(OpenAIEndpoint),
-                new AzureKeyCredential(ApiKey)
+                new ApiKeyCredential(ApiKey)
             );
 
             Console.Write("prompt: ");
@@ -249,7 +254,7 @@ namespace ConsoleApp1
         {
             var client = new AzureOpenAIClient(
                 new Uri(OpenAIEndpoint),
-                new AzureKeyCredential(ApiKey)
+                new ApiKeyCredential(ApiKey)
             );
 
             Console.Write("prompt: ");
@@ -274,7 +279,7 @@ namespace ConsoleApp1
         {
             var client = new AzureOpenAIClient(
                 new Uri(OpenAIEndpoint),
-                new AzureKeyCredential(ApiKey)
+                new ApiKeyCredential(ApiKey)
             );
 
             Console.Write("prompt: ");
@@ -298,7 +303,7 @@ namespace ConsoleApp1
         {
             var client = new AzureOpenAIClient(
                 new Uri(OpenAIEndpoint),
-                new AzureKeyCredential(ApiKey)
+                new ApiKeyCredential(ApiKey)
             );
 
             Console.Write("prompt: ");
@@ -322,7 +327,7 @@ namespace ConsoleApp1
         {
             var client = new AzureOpenAIClient(
                 new Uri(OpenAIEndpoint),
-                new AzureKeyCredential(ApiKey)
+                new ApiKeyCredential(ApiKey)
             );
 
             Console.Write("prompt: ");
@@ -347,7 +352,7 @@ namespace ConsoleApp1
         {
             var client = new AzureOpenAIClient(
                 new Uri(OpenAIEndpoint),
-                new AzureKeyCredential(ApiKey)
+                new ApiKeyCredential(ApiKey)
             );
 
             Console.Write("prompt: ");
@@ -372,7 +377,7 @@ namespace ConsoleApp1
         {
             var client = new AzureOpenAIClient(
                 new Uri(OpenAIEndpoint),
-                new AzureKeyCredential(ApiKey)
+                new ApiKeyCredential(ApiKey)
             );
 
             var chatClient = client.GetChatClient(ModelDeployName);
@@ -417,7 +422,7 @@ namespace ConsoleApp1
         {
             var client = new AzureOpenAIClient(
                 new Uri(OpenAIEndpoint),
-                new AzureKeyCredential(ApiKey)
+                new ApiKeyCredential(ApiKey)
             );
 
             var chatClient = client.GetChatClient(ModelDeployName);
@@ -458,6 +463,72 @@ namespace ConsoleApp1
         }
 
 
+        private static async Task Chapter04_03_01()
+        {
+            var azureClient = new AzureOpenAIClient(
+                new Uri(OpenAIEndpoint),
+                new ApiKeyCredential(ApiKey)
+            );
+
+            ImageClient client = azureClient.GetImageClient("Dalle3");
+            ClientResult<GeneratedImage> imageResult = await client.GenerateImageAsync("The beginning of the world and the budgie in a Chojugiga style", new()
+            {
+                Quality = GeneratedImageQuality.Standard,
+                Size = GeneratedImageSize.W1024xH1024,
+                ResponseFormat = GeneratedImageFormat.Uri
+            });
+
+            // Image Generations responses provide URLs you can use to retrieve requested images
+            GeneratedImage image = imageResult.Value;
+            Console.WriteLine($"Image URL: {image.ImageUri}");
+
+        }
+
+        private static async Task Chapter04_08_03()
+        {
+            var azureClient = new AzureOpenAIClient(
+                new Uri(OpenAIEndpoint),
+                new ApiKeyCredential(ApiKey)
+            );
+
+            ImageClient client = azureClient.GetImageClient("Dalle3");
+            ClientResult<GeneratedImage> imageResult = await client.GenerateImageAsync("cat", new()
+            {
+                Quality = GeneratedImageQuality.Standard,
+                Size = GeneratedImageSize.W1024xH1024,
+                ResponseFormat = GeneratedImageFormat.Bytes
+            });
+
+            // Image Generations responses provide URLs you can use to retrieve requested images
+            GeneratedImage image = imageResult.Value;
+            BinaryData bytes = image.ImageBytes;
+            using FileStream stream = File.OpenWrite($"{Guid.NewGuid()}.png");
+            bytes.ToStream().CopyTo(stream);
+
+            Console.WriteLine($"Image URL: {image.ImageUri}");
+        }
+
+        private static async Task Chapter05_02_01()
+        {
+            var client = new AzureOpenAIClient(
+                new Uri(OpenAIEndpoint),
+                new ApiKeyCredential(ApiKey)
+            );
+
+            Console.Write("prompt: ");
+            string prompt = Console.ReadLine() ?? "Hello.";
+
+            var response = client.GetEmbeddingClient("SampleEmbeddingModel01");
+
+            //var values = await response.GenerateEmbeddingsAsync(new List<string> { prompt });
+            //var values = await response.GenerateEmbeddingsAsync(new List<string> { "試しにEmbeddingしてみる。" });
+            var values = response.GenerateEmbedding("試しにEmbeddingしてみる。");
+
+
+            
+        }
+
+
         private async Task Sample()
         {
             var systemPrompt = "あなたは会話友達です。";
@@ -468,7 +539,7 @@ namespace ConsoleApp1
             // OpenAI クライアントの初期化
             var openAIClient = new AzureOpenAIClient(
                 new Uri(OpenAIEndpoint),
-                new AzureKeyCredential(ApiKey)
+                new ApiKeyCredential(ApiKey)
             );
 
             // チャットクライアントの取得
