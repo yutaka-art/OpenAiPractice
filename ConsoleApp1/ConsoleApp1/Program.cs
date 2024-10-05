@@ -1,13 +1,9 @@
-﻿using Azure;
-using Azure.AI.OpenAI;
-using Azure.AI.OpenAI.Chat;
-using Azure.Search.Documents;
-using Microsoft.Identity.Client;
+﻿using Azure.AI.OpenAI;
+using ConsoleApp1.Models;
+using Newtonsoft.Json;
 using OpenAI.Chat;
-using OpenAI.Embeddings;
 using OpenAI.Images;
 using System.ClientModel;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace ConsoleApp1
 {
@@ -22,7 +18,7 @@ namespace ConsoleApp1
 
         public static async Task Main(string[] args)
         {
-            await Chapter05_02_01();
+            await Chapter05_05_02();
         }
 
         private static void Chapter03_07()
@@ -524,10 +520,178 @@ namespace ConsoleApp1
             //var values = await response.GenerateEmbeddingsAsync(new List<string> { "試しにEmbeddingしてみる。" });
             var values = response.GenerateEmbedding("試しにEmbeddingしてみる。");
 
+            //var generateEmbeddingsResult = response.GenerateEmbeddings(["にゃーん"]);
+            var embedding = values;
 
-            
+            var dataArray = embedding.Value.ToFloats().ToArray();
+            foreach (var value in dataArray)
+            {
+                Console.WriteLine(value);
+            }
+
         }
 
+
+        private static async Task Chapter05_04_01()
+        {
+            var client = new AzureOpenAIClient(
+                new Uri(OpenAIEndpoint),
+                new ApiKeyCredential(ApiKey)
+            );
+
+            Console.Write("title: ");
+            var title = Console.ReadLine() ?? "Hello.";
+            Console.Write("description: ");
+            var description = Console.ReadLine() ?? "Hello.";
+
+            var response = client.GetEmbeddingClient("SampleEmbeddingModel01");
+
+            var values = response.GenerateEmbedding(description);
+            var embed = values.Value.ToFloats().ToArray();
+            var embedString = new System.Text.StringBuilder();
+
+            embedString.Append("[");
+            foreach (var value in embed)
+            {
+                embedString.Append($"{value},");
+            }
+            // 最後のカンマを削除
+            embedString.Length--;
+            embedString.Append("]");
+
+            Console.Write(embedString.ToString());
+
+            var desctop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+            var fpath = Path.Combine(desctop, "output.csv");
+
+            try
+            {
+                using (StreamWriter writer = new StreamWriter(fpath, true, System.Text.Encoding.UTF8, 20000))
+                {
+                    // embedStringをダブルクオートで囲む
+                    var data = $"{title},{description},\"{embedString.ToString()}\"";
+                    writer.Write(data);
+                    writer.WriteLine();
+                    writer.Flush();
+                    writer.Close();
+                }
+            }
+            catch (IOException ex)
+            {
+                Console.WriteLine($"CSVファイル読み込みエラー：{ex.Message}");
+            }
+        }
+
+
+        private static async Task Chapter05_05_02()
+        {
+            var client = new AzureOpenAIClient(
+                new Uri(OpenAIEndpoint),
+                new ApiKeyCredential(ApiKey)
+            );
+
+            Console.Write("prompt: ");
+            var prompt = Console.ReadLine() ?? "Hello.";
+
+            var response = client.GetEmbeddingClient("SampleEmbeddingModel01");
+
+            var values = response.GenerateEmbedding(prompt);
+            float[]? embedded_data = values.Value.ToFloats().ToArray();
+            var embedString = new System.Text.StringBuilder();
+
+            embedString.Append("[");
+            foreach (var value in embedded_data)
+            {
+                embedString.Append($"{value},");
+            }
+            // 最後のカンマを削除
+            embedString.Length--;
+            embedString.Append("]");
+
+            //Console.Write(embedString.ToString());
+
+            var desctop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+            var fpath = Path.Combine(desctop, "output.csv");
+
+            // データ保管用のリストの用意
+            var embedding_data = new List<EmbeddingData>();
+
+            try
+            {
+                using (StreamReader reader = new StreamReader(fpath, System.Text.Encoding.UTF8))
+                {
+                    string? line;
+                    _= reader.ReadLine();
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        // 行データをカンマで分割しJSONフォーマットにする
+                        var arr = line.Split(',');
+
+                        // embedding 部分の前後のダブルクォートを削除し、JSONで正しく解釈されるようにする
+                        var target = String.Join(",", arr.Skip(2)).Trim('"');
+                        var json_str = $"{{\"title\":\"{arr[0]}\",\"description\":\"{arr[1]}\",\"embedding\":{target} }}";
+
+                        // JSONデータからEmbeddingDataを生成
+                        var data = JsonConvert.DeserializeObject<EmbeddingData>(json_str);
+                        if (data != null)
+                        {
+                            embedding_data.Add(data);
+                        }
+                    }
+                }
+            }
+            catch (IOException ex)
+            {
+                Console.WriteLine($"CSVファイル読み込みエラー：{ex.Message}");
+            }
+
+            // もっとも値の高いデータを保管しておく変数
+            EmbeddingData? select = null;
+            double last_CS = 0;
+
+            // コサイン類似度を計算する
+            foreach (EmbeddingData embeded_item in embedding_data)
+            {
+                Double CS = GetCosineSimilarity(embedded_data, embeded_item.embedding);
+                if (CS > last_CS)
+                {
+                    last_CS = CS;
+                    select = embeded_item;
+                }
+            }
+
+            // 結果を表示
+            Console.Write("Result: ");
+            if (select != null)
+            {
+                Console.WriteLine(select.title);
+            }
+            else
+            {
+                Console.WriteLine("Not Found");
+            }
+        }
+
+        private static double GetCosineSimilarity(float[]? vector1, float[]? vector2)
+        {
+            if (vector1 == null || vector2 == null)
+            {
+                return 0;
+            }
+
+            int count = vector1.Count() < vector2.Count() ? vector1.Count() : vector2.Count();
+            double dot = 0.0d;
+            double mag1 = 0.0d;
+            double mag2 = 0.0d;
+
+            for (int n = 0; n < count; n++)
+            {
+                dot += vector1[n] * vector2[n];
+                mag1 += Math.Pow(vector1[n], 2);
+                mag2 += Math.Pow(vector2[n], 2);
+            }
+            return dot / (Math.Sqrt(mag1) * Math.Sqrt(mag2));
+        }
 
         private async Task Sample()
         {
