@@ -4,6 +4,8 @@ using Newtonsoft.Json;
 using OpenAI.Chat;
 using OpenAI.Images;
 using System.ClientModel;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 
 namespace ConsoleApp1
 {
@@ -11,6 +13,7 @@ namespace ConsoleApp1
     {
         // Azure OpenAI Service のエンドポイント
         const string OpenAIEndpoint = "https://oai-playground-osa-002.openai.azure.com/";
+        const string OpenAIEndpoint_Full = "https://oai-playground-osa-002.openai.azure.com/openai/deployments/SampleChatModel01/completions?api-version=2024-09-01-preview";
         // 使いたいモデルのデプロイ名
         const string ModelDeployName = "SampleChatModel01";
         // Azure OpenAI Service の API キー
@@ -18,7 +21,7 @@ namespace ConsoleApp1
 
         public static async Task Main(string[] args)
         {
-            await Chapter05_05_02();
+            await Chapter06_08_01();
         }
 
         private static void Chapter03_07()
@@ -692,6 +695,72 @@ namespace ConsoleApp1
             }
             return dot / (Math.Sqrt(mag1) * Math.Sqrt(mag2));
         }
+
+
+        private static async Task Chapter06_08_01()
+        {
+            Console.Write("prompt: ");
+            string prompt = Console.ReadLine() ?? "Hello.";
+
+            // HttpClientの作成
+            var httpClient = new HttpClient();
+            // ヘッダ情報の設定
+            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            httpClient.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("UTF-8"));
+            httpClient.DefaultRequestHeaders.AcceptLanguage.Add(new StringWithQualityHeaderValue("ja-JP"));
+            httpClient.DefaultRequestHeaders.Add("api-key", ApiKey);
+
+            // ボディコンテンツの作成
+            //var requestBody = new ChatRequestModel
+            //{
+            //    Messages = new List<MessageObject>
+            //    {
+            //        new MessageObject
+            //        {
+            //            Role = "user",
+            //            Content = prompt
+            //        }
+            //    },
+            //    PastMessages = 10,
+            //    Temperature = 0.7,
+            //    TopP = 0.95,
+            //    FrequencyPenalty = 0,
+            //    PresencePenalty = 0,
+            //    MaxTokens = 800,
+            //    Stop = null
+            //};
+
+            var requestBody = new
+            {
+                prompt = prompt,
+                max_tokens = 100,
+            };
+
+            // JsonContentの作成 (Content-Typeはここで自動的に設定される)
+            var json_content = JsonContent.Create(requestBody);
+            try
+            {
+                // END_POINTにPOSTアクセスする
+                using (var response = await httpClient.PostAsync(OpenAIEndpoint_Full, json_content))
+                {
+                    // ステータスコードが200番台以外の場合はエラー
+                    response.EnsureSuccessStatusCode();
+
+                    // 応答からテキストを取り出す
+                    var result = await response.Content.ReadAsStringAsync();
+                    // JSONテキストをオブジェクトに変換
+                    CompletionResult? json_data = JsonConvert.DeserializeObject<CompletionResult>(result);
+                    // 応答のテキストを表示
+                    Console.WriteLine(json_data?.choices?[0].text);
+                }
+
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"HTTPリクエストエラー：{ex.Message}");
+            }
+        }
+
 
         private async Task Sample()
         {

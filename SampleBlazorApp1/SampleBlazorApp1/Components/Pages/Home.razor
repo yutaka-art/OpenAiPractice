@@ -1,0 +1,58 @@
+﻿@page "/"
+@rendermode InteractiveServer
+
+@using System.ClientModel;
+@using Azure.AI.OpenAI;
+@using OpenAI.Chat;
+
+<PageTitle>Home</PageTitle>
+
+<h1>Azure OpenAI Sample</h1>
+
+<p class="h5">Completion: @completionStr</p>
+
+<div class="form-row">
+    <input type="text" @bind="inputVaule" class="form-control col-8" />
+    <button @onclick="GetCompletion" class="btn btn-primary col">Click</button>
+</div>
+
+@code {
+    private string inputVaule = "";
+    private string completionStr = "";
+    const string OPENAI_API_KEY = "ceaedacb49c64657a502f1082abc8725";
+    const string BASE_URL = "https://oai-playground-osa-002.openai.azure.com/";
+    const string MODEL_NAME = "SampleChatModel01";
+
+    private async Task GetCompletion()
+    {
+        try
+        {
+            var client = new AzureOpenAIClient(
+                new Uri(BASE_URL),
+                new ApiKeyCredential(OPENAI_API_KEY)
+            );
+            var chatHistory = new List<ChatMessage>();
+
+            var options = new ChatCompletionOptions
+                {
+                    Temperature = (float)0.7,
+                    MaxOutputTokenCount = 800,
+                    TopP = (float)0.95,
+                    FrequencyPenalty = (float)0.0,
+                    PresencePenalty = (float)0.0
+                };
+
+            var targetMessage = ChatMessage.CreateUserMessage(inputVaule);
+            chatHistory.Add(targetMessage);
+
+            var response = await client.GetChatClient(MODEL_NAME)
+                .CompleteChatAsync(chatHistory, options);
+            completionStr = response.Value.Content.Last().Text;
+            chatHistory.Add(ChatMessage.CreateAssistantMessage(response.Value.Content.Last().Text));
+        }
+        catch (Exception ex)
+        {
+            completionStr = $"Error: {ex.Message}";
+        }
+    }
+}
