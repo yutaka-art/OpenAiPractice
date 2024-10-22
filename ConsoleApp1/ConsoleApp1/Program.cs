@@ -6,6 +6,8 @@ using OpenAI.Images;
 using System.ClientModel;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Microsoft.CognitiveServices.Speech;
+using Microsoft.CognitiveServices.Speech.Audio;
 
 namespace ConsoleApp1
 {
@@ -19,9 +21,13 @@ namespace ConsoleApp1
         // Azure OpenAI Service の API キー
         const string ApiKey = "ceaedacb49c64657a502f1082abc8725"; // ここに取得した API キーを入力
 
+        const string SPEECH_KEY = "cd0fda4d54a94b549e748c0a6117b3d5";
+        const string REGION = "eastus";
+        const string CustomVoiceEndpoint = "https://aima-openai-playground-osa-001.cognitiveservices.azure.com/";
+
         public static async Task Main(string[] args)
         {
-            await Chapter06_08_01();
+            await Chapter07_06_01();
         }
 
         private static void Chapter03_07()
@@ -696,7 +702,6 @@ namespace ConsoleApp1
             return dot / (Math.Sqrt(mag1) * Math.Sqrt(mag2));
         }
 
-
         private static async Task Chapter06_08_01()
         {
             Console.Write("prompt: ");
@@ -759,6 +764,69 @@ namespace ConsoleApp1
             {
                 Console.WriteLine($"HTTPリクエストエラー：{ex.Message}");
             }
+        }
+
+        private static async Task Chapter07_04_02()
+        {
+            // SpeechConfigの作成
+            var speechConfig = SpeechConfig.FromSubscription(SPEECH_KEY, REGION);
+            speechConfig.SpeechRecognitionLanguage = "ja-JP";
+
+            // AudioConfigの作成
+            using var audioConfig = AudioConfig.FromDefaultMicrophoneInput();
+
+            // SpeechRecognizerの作成
+            using var recognizer = new SpeechRecognizer(speechConfig, audioConfig);
+
+            Console.WriteLine("話しかけてください。話しかけを終了するには Ctrl+C を押してください。");
+            // 音声認識の実行
+            var recognition = await recognizer.RecognizeOnceAsync();
+
+            // 認識結果の表示
+            switch (recognition.Reason)
+            {
+                case ResultReason.RecognizedSpeech:
+                    Console.WriteLine($"認識結果: {recognition.Text}");
+                    break;
+                case ResultReason.NoMatch:
+                    Console.WriteLine("音声が認識できませんでした。");
+                    break;
+                case ResultReason.Canceled:
+                    var cancellation = CancellationDetails.FromResult(recognition);
+                    Console.WriteLine($"エラー: {cancellation.Reason}");
+                    break;
+            }
+
+        }
+
+
+        private static async Task Chapter07_06_01()
+        {
+            // SpeechConfigの作成
+            var speechConfig = SpeechConfig.FromSubscription(SPEECH_KEY, REGION);
+            speechConfig.SpeechRecognitionLanguage = "ja-JP";
+
+            speechConfig.SpeechSynthesisVoiceName = "ja-JP-NanamiNeural";
+            using var speechSynthesizer = new SpeechSynthesizer(speechConfig);
+
+            // テキストを入力する
+            Console.Write("読み上げるテキストを入力してください: ");
+            string? prompt = Console.ReadLine();
+
+            var synthesis_result = await speechSynthesizer.SpeakTextAsync(prompt);
+
+            // 認識結果の処理
+            switch (synthesis_result.Reason)
+            {
+                case ResultReason.SynthesizingAudioCompleted:
+                    Console.WriteLine($"再生するテキスト[{prompt}]");
+                    break;
+                case ResultReason.Canceled:
+                    var cancellation = SpeechSynthesisCancellationDetails.FromResult(synthesis_result);
+                    Console.WriteLine($"エラー: {cancellation.Reason}");
+                    break;
+            }
+
         }
 
 
