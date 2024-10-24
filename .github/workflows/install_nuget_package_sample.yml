@@ -20,5 +20,5 @@ jobs:
         working-directory: ConsoleApp1/ConsoleApp1
 
       - name: Install package
-        run: dotnet add package ConsoleApp1 --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+        run: dotnet add package ConsoleApp1 --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
         working-directory: ConsoleApp1/ConsoleApp1
