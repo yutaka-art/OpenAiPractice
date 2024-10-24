@@ -14,5 +14,4 @@ jobs:
         dotnet-version: '8.x'
     - run: dotnet restore
         working-directory: ConsoleApp1/ConsoleApp1
-
     - run: dotnet add package ConsoleApp1 --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
