@@ -17,8 +17,8 @@ jobs:
 
       - name: Install dependencies
         run: dotnet restore
-        working-directory: ConsoleApp1/ConsoleApp1
+        working-directory: DemoCoreServices/DemoCoreServices
 
       - name: Install package
-        run: dotnet add package ConsoleApp1 --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
-        working-directory: ConsoleApp1/ConsoleApp1
+        run: dotnet add package DemoCoreServices --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+        working-directory: DemoCoreServices/DemoCoreServices

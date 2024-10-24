@@ -20,11 +20,11 @@ jobs:
 
       - name: Install dependencies
         run: dotnet restore
-        working-directory: ConsoleApp1/ConsoleApp1
+        working-directory: DemoCoreServices/DemoCoreServices
 
       - name: Build
         run: dotnet build --no-restore --configuration Release
-        working-directory: ConsoleApp1/ConsoleApp1
+        working-directory: DemoCoreServices/DemoCoreServices
 
       # タグのバージョンを取得
       - name: Get latest tag
