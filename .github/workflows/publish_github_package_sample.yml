@@ -1,6 +1,8 @@
 name: Package and Publish to GitHub Packages Sample
 
-on: [push]
+#on: [push]
+on:
+  workflow_dispatch:
 
 jobs:
   build:
