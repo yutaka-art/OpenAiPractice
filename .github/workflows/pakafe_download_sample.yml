@@ -1,0 +1,16 @@
+name: Install NuGet package
+
+on:
+  workflow_dispatch:
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.x'
+    - run: dotnet restore
+    - run: dotnet add package ConsoleApp1 --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
